@@ -2,6 +2,7 @@
 using namespace std;
 
 #include "Libro.hpp"
+#include "Header.hpp"
 #include <vector>
 using std::vector;
 
@@ -17,7 +18,6 @@ int menu();
 int main(int argc, char const *argv[]){
 	//Editorial editoriales[30];
 
-
 	int seleccionMenu;
 
 	do {
@@ -26,12 +26,20 @@ int main(int argc, char const *argv[]){
 		ifstream infile("libros.bin",ios::binary);
 
 
-		if(!infile.good()){
-			
-			cout<<"Escribiendo el jader"<<endl;
-			infile.write()
+		if(!infile.good()){	
+			infile.close();
+			ofstream fileWrite("libros.bin",ios::binary| ios::trunc | ios::out);
+			//int availList,int sizeOfCampo,int RecordCount,bool DirtyBit
+			Header header(-1, sizeof(Libro),0,false);
+			//fileWrite.write(reinterpret_cast<char*>(&header,sizeof(Header)));
+			fileWrite.write(reinterpret_cast<char*>(&header),sizeof(Header));
+			fileWrite.close();
 
 
+
+
+		}else{
+			cout<<"Creando El header inicial"<<endl;
 		}
 		if(seleccionMenu==1){
 			char ISBN [14];
