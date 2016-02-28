@@ -1,7 +1,6 @@
 #include <iostream>
 using namespace std;
 
-
 #include "Libro.hpp"
 #include <vector>
 using std::vector;
@@ -24,6 +23,16 @@ int main(int argc, char const *argv[]){
 	do {
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
+		ifstream infile("libros.bin",ios::binary);
+
+
+		if(!infile.good()){
+			
+			cout<<"Escribiendo el jader"<<endl;
+			infile.write()
+
+
+		}
 		if(seleccionMenu==1){
 			char ISBN [14];
 			char Nombre[76];
@@ -85,6 +94,8 @@ int main(int argc, char const *argv[]){
 			
 
 		}else if (seleccionMenu==3){
+
+			
 
 
 
