@@ -25,7 +25,7 @@ class Libro{
 		string toString(); 
 
 	private:
-		char ISBN[14];
+		char ISBN[18];
 		char Nombre[76];
 		char Autor[76];
 		unsigned int EditorialID;

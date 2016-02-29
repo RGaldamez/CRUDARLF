@@ -24,31 +24,32 @@ int main(int argc, char const *argv[]){
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
 		ifstream infile("libros.bin",ios::binary);
+		Header header(-1, sizeof(Libro),0,false);
 
-
-		if(!infile.good()){	
+		if(!infile.good()){
 			infile.close();
 			ofstream fileWrite("libros.bin",ios::binary| ios::trunc | ios::out);
 			//int availList,int sizeOfCampo,int RecordCount,bool DirtyBit
-			Header header(-1, sizeof(Libro),0,false);
 			//fileWrite.write(reinterpret_cast<char*>(&header,sizeof(Header)));
 			fileWrite.write(reinterpret_cast<char*>(&header),sizeof(Header));
 			fileWrite.close();
-
-
-
-
+			
 		}else{
-			cout<<"Creando El header inicial"<<endl;
+			ifstream infile("libros.bin",ios::binary);			
+			infile.read(reinterpret_cast<char*>(&header),sizeof(Header));
+			infile.close();
 		}
+
+
+
 		if(seleccionMenu==1){
-			char ISBN [14];
+			char ISBN [18];
 			char Nombre[76];
 			char Autor[76];
 			unsigned int editorialID;
 			getchar();
 			cout<<"Porfavor ingrese el ISBN del libro: ";
-			cin.getline(ISBN,14);
+			cin.getline(ISBN,18);
 			cout<<endl;
 			cout<<"Porfavor ingrese el nombre del libro: ";
 			cin.getline(Nombre,76);
@@ -59,23 +60,17 @@ int main(int argc, char const *argv[]){
 			cout<<"porfavor ingrese un ID: ";
 			cin>>editorialID;
 			Libro libroTemp(ISBN,Nombre,Autor,editorialID);
-			ofstream outfile("libros.bin",ios::binary | ios::app | ios::ate);
-			//streampos end;
-			//outfile.seekp(0,ios::end);
-			//end = outfile.tellp();
-			//outfile << reinterpret_cast<char*>(&libroTemp);
-			outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
-			outfile.close();
-			//cout<<"El libro fue agregardo"<<endl;
-			
-			/*
-			int hola = 1;
-			outfile.write(libroTemp.getISBN(),14);
-			outfile.write(libroTemp.getNombre(),76);	
-			outfile.write(libroTemp.getAutor(),76);
-			outfile.write(hola,sizeof(int));
-			outfile.close();
-			*/
+
+			if (header.getAvailList()==-1){
+				ofstream outfile("libros.bin",ios::binary | ios::app | ios::ate);
+				outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
+				outfile.close();
+
+			}else{
+				
+				
+			}
+				
 		
 		}else if(seleccionMenu==2){
 			ifstream infile("libros.bin",std::ifstream::binary);
@@ -95,22 +90,12 @@ int main(int argc, char const *argv[]){
 			}
 			infile.close();
 			
-			//while(!infile.eof()){
-
-			
-			//}
 			
 
 		}else if (seleccionMenu==3){
 
-			
-
-
-
 
 		}else if (seleccionMenu==4){
-
-
 
 
 		}else if (seleccionMenu == 5){
@@ -120,7 +105,12 @@ int main(int argc, char const *argv[]){
 			infile.seekg(0,ios::end);
 			end = infile.tellg();
 			infile.close();
-			cout<<"El tamaño del archivo es de : "<<end-begin<<" bytes"<<endl;
+			if(end-begin<=1){
+				cout<<"El tamaño del archivo es de : "<<end-begin<<" byte"<<endl;
+			}else{
+				cout<<"El tamaño del archivo es de : "<<end-begin<<" bytes"<<endl;
+			}
+			
 		}
 
 	}while (seleccionMenu!=6);	

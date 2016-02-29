@@ -53,7 +53,7 @@ void Libro::setEditorialID(unsigned int Editorial){
 
 string Libro::toString(){
 	stringstream ss;
-	int size =14+(76*2)+sizeof(unsigned int);
+	int size =18+(76*2)+sizeof(unsigned int);
 	char temp[size];
 	ss<<this->ISBN;
 	ss<<this->Nombre;

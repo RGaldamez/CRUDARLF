@@ -15,4 +15,4 @@ Header.o:	Header.cpp	Header.hpp
 
 
 clean:
-	rm *.o main
+	rm *.o main	libros.bin
