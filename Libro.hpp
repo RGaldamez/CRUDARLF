@@ -11,10 +11,10 @@ class Libro{
 		~Libro();
 
 		//Getters
-		char* getISBN();
-		char* getNombre();
-		char* getAutor();
-		unsigned int getEditorialID();
+		const char* getISBN();
+		const char* getNombre();
+		const char* getAutor();
+		const unsigned int getEditorialID();
 
 		//Setters
 		void setISBN(char* ISBN);

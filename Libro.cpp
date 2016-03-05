@@ -22,19 +22,19 @@ Libro::~Libro(){
 }
 
 //Getters
-char* Libro::getISBN(){
+const char* Libro::getISBN(){
 	return this->ISBN;
 }
 
-char* Libro::getNombre(){
+const char* Libro::getNombre(){
 	return this->Nombre;
 }
 
-char* Libro::getAutor(){
+const char* Libro::getAutor(){
 	return this->Autor;
 }
 
-unsigned int Libro::getEditorialID(){
+const unsigned int Libro::getEditorialID(){
 	return this->EditorialID;
 }
 //Setters 

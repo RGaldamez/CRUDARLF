@@ -19,7 +19,6 @@ using std::ofstream;
 int menu();
 int main(int argc, char const *argv[]){
 	//Editorial editoriales[30];
-
 	int seleccionMenu;
 	bool headerExists = false;
 	do {
@@ -46,9 +45,9 @@ int main(int argc, char const *argv[]){
 		}
 
 		if(seleccionMenu==1){
-			char defaultAvail[] = "-1";
-			char ISBN [14];
-			char ISBNTemp[23];
+			char defaultAvail[] = "0000000-1";
+			char ISBN [23];
+			char ISBNTemp[14];
 			char Nombre[76];
 			char Autor[76];
 			unsigned int editorialID;
@@ -77,13 +76,14 @@ int main(int argc, char const *argv[]){
 			}else{
 				long int offset = (header.getAvailList()*sizeof(Libro)) + sizeof(Header);
 				streampos pos = offset;
-				ifstream infile = ("libros.bin", ios::binary);
+				ifstream infile("libros.bin", ios::binary);
 				infile.seekg(pos);
 				Libro temp;
 				infile.read(reinterpret_cast<char*>(&temp),sizeof(Libro));
 				char deletedISBN[23];
 				strcpy(deletedISBN,temp.getISBN());
 				char newposition[7];
+
 				int contador = 0;
 				int contadorAsterisco = 0;
 				int debug;
@@ -94,17 +94,19 @@ int main(int argc, char const *argv[]){
 						if(contador==1){
 							newposition[0] = deletedISBN[contador+1];
 						}else{
-							newposition+= deletedISBN[contador];
+							newposition[contador+1] = deletedISBN[contador];
 						}
 					}
 				}
-				long int nuevoElementoAvail = static_cast<long int>(&newposition);
+				//long int nuevoElementoAvail = static_cast<long int>(&newposition);
+				long int nuevoElementoAvail = (long int) newposition;
 				header.setAvailList(nuevoElementoAvail);
 
 				ofstream outfile("libros.bin", ios::binary);
 				outfile.seekp(pos);
 				outfile.write(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
 				outfile.close();
+				header.setDirty(true);
 				
 			}
 				
@@ -112,18 +114,71 @@ int main(int argc, char const *argv[]){
 		}else if(seleccionMenu==2){
 			ifstream infile("libros.bin",std::ifstream::binary);
 			Libro libro;
-
+			infile.seekg(sizeof(Header));
 			while(!infile.eof()){
+				char actualISBN[23];
+				char ISBNfinal[14];
+				int contadorFinal=0;
+				int contadorAsterisco=0;
+				
+
 				infile.read(reinterpret_cast<char*>(&libro),sizeof(Libro));	
-				int contador = 0;
-				if (!infile.eof()){
-					contador++;
-					cout<<contador<<": ";
-					cout<<libro.getISBN()<<endl;
-					cout<<libro.getNombre()<<endl;
-					cout<<libro.getAutor()<<endl;
-					cout<<libro.getEditorialID()<<endl;
+				strcpy(actualISBN,libro.getISBN());
+
+				if (actualISBN[0] == '*'){
+					for (int i = 0; i < strlen(actualISBN); ++i){
+						if(actualISBN[i] == '*'){
+							contadorAsterisco++;
+						}
+						if(contadorAsterisco == 2){
+							ISBNfinal[contadorFinal] = actualISBN[i];
+							contadorFinal++;
+						}
+					}
 				}
+				char ISBNToShow[14];
+				int contadorToShow=0;
+				if(ISBNfinal[7] == '-'){
+					
+					for (int i = 0; i < strlen(ISBNfinal); ++i){
+						if (i>1){
+							ISBNToShow[contadorToShow] = ISBNfinal[i];
+							contadorToShow++;
+						}
+					}
+					ISBNToShow[contadorToShow] = '\0';
+					int contador = 0;
+					if (!infile.eof() && actualISBN[0] != '*'){
+						contador++;
+						cout<<contador<<": ";
+						cout<<ISBNToShow<<endl;
+						cout<<libro.getNombre()<<endl;
+						cout<<libro.getAutor()<<endl;
+						cout<<libro.getEditorialID()<<endl;
+					}
+
+				}else{
+					char ISBNToShow[14];
+					int contadorshow = 0;
+					for (int i = 0; i < strlen(libro.getISBN()); ++i){
+						if (i>8){
+							ISBNToShow[contadorshow] = libro.getISBN()[i];
+							contadorshow++;
+						}
+					}
+					int contador = 0;
+					if (!infile.eof() && actualISBN[0] != '*'){
+						contador++;
+						cout<<contador<<": ";
+						cout<<ISBNToShow<<endl;
+						cout<<libro.getNombre()<<endl;
+						cout<<libro.getAutor()<<endl;
+						cout<<libro.getEditorialID()<<endl;
+					}
+
+				}
+
+					
 			}
 			infile.close();
 			
