@@ -1,12 +1,12 @@
 #include "Header.hpp"
 
-Header::Header(int availList,int sizeOfCampo,int RecordCount,bool DirtyBit){
+Header::Header(long int availList,int sizeOfCampo,int RecordCount,bool DirtyBit){
 	this->availList = availList;
 	this->size = sizeOfCampo;
 	this->recordCount = RecordCount;
 	this->dirtyBit = DirtyBit;
 }
-void Header::setAvailList(int availList){
+void Header::setAvailList(long int availList){
 	this->availList = availList;
 }
 void Header::setSize(int size){
@@ -20,7 +20,7 @@ void Header::setDirty(bool Dirty){
 void Header::setRecordCount(int RecordCount){
 	this->recordCount = RecordCount;
 }
-int Header::getAvailList(){
+long int Header::getAvailList(){
 	return this->availList;
 }
 int Header::getSize(){

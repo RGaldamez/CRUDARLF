@@ -9,6 +9,8 @@ using std::vector;
 #include <string>
 using std::string;
 
+#include <cstring>
+
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
@@ -19,37 +21,42 @@ int main(int argc, char const *argv[]){
 	//Editorial editoriales[30];
 
 	int seleccionMenu;
-
+	bool headerExists = false;
 	do {
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
 		ifstream infile("libros.bin",ios::binary);
 		Header header(-1, sizeof(Libro),0,false);
-
-		if(!infile.good()){
-			infile.close();
-			ofstream fileWrite("libros.bin",ios::binary| ios::trunc | ios::out);
-			//int availList,int sizeOfCampo,int RecordCount,bool DirtyBit
-			//fileWrite.write(reinterpret_cast<char*>(&header,sizeof(Header)));
-			fileWrite.write(reinterpret_cast<char*>(&header),sizeof(Header));
-			fileWrite.close();
-			
-		}else{
-			ifstream infile("libros.bin",ios::binary);			
-			infile.read(reinterpret_cast<char*>(&header),sizeof(Header));
-			infile.close();
+		if (!headerExists){
+			if(!infile.good()){
+				infile.close();
+				ofstream fileWrite("libros.bin",ios::binary| ios::trunc | ios::out);
+				//int availList,int sizeOfCampo,int RecordCount,bool DirtyBit
+				//fileWrite.write(reinterpret_cast<char*>(&header,sizeof(Header)));
+				fileWrite.write(reinterpret_cast<char*>(&header),sizeof(Header));
+				fileWrite.close();
+				headerExists = true;
+				
+			}else{
+				ifstream infile("libros.bin",ios::binary);			
+				infile.read(reinterpret_cast<char*>(&header),sizeof(Header));
+				infile.close();
+				headerExists = true;
+			}
 		}
 
-
-
 		if(seleccionMenu==1){
-			char ISBN [18];
+			char defaultAvail[] = "-1";
+			char ISBN [14];
+			char ISBNTemp[23];
 			char Nombre[76];
 			char Autor[76];
 			unsigned int editorialID;
 			getchar();
 			cout<<"Porfavor ingrese el ISBN del libro: ";
-			cin.getline(ISBN,18);
+			cin.getline(ISBNTemp,14);
+			strcpy(ISBN,defaultAvail);
+			strcat(ISBN,ISBNTemp);
 			cout<<endl;
 			cout<<"Porfavor ingrese el nombre del libro: ";
 			cin.getline(Nombre,76);
@@ -61,13 +68,43 @@ int main(int argc, char const *argv[]){
 			cin>>editorialID;
 			Libro libroTemp(ISBN,Nombre,Autor,editorialID);
 
+
 			if (header.getAvailList()==-1){
 				ofstream outfile("libros.bin",ios::binary | ios::app | ios::ate);
 				outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
 				outfile.close();
 
 			}else{
-				
+				long int offset = (header.getAvailList()*sizeof(Libro)) + sizeof(Header);
+				streampos pos = offset;
+				ifstream infile = ("libros.bin", ios::binary);
+				infile.seekg(pos);
+				Libro temp;
+				infile.read(reinterpret_cast<char*>(&temp),sizeof(Libro));
+				char deletedISBN[23];
+				strcpy(deletedISBN,temp.getISBN());
+				char newposition[7];
+				int contador = 0;
+				int contadorAsterisco = 0;
+				int debug;
+				while(contadorAsterisco<2){
+					if(deletedISBN[contador]=='*'){
+						contadorAsterisco++;
+					}else{
+						if(contador==1){
+							newposition[0] = deletedISBN[contador+1];
+						}else{
+							newposition+= deletedISBN[contador];
+						}
+					}
+				}
+				long int nuevoElementoAvail = static_cast<long int>(&newposition);
+				header.setAvailList(nuevoElementoAvail);
+
+				ofstream outfile("libros.bin", ios::binary);
+				outfile.seekp(pos);
+				outfile.write(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
+				outfile.close();
 				
 			}
 				
