@@ -21,6 +21,7 @@ int main(int argc, char const *argv[]){
 	//Editorial editoriales[30];
 	int seleccionMenu;
 	bool headerExists = false;
+	bool repeat = true;
 	do {
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
@@ -72,6 +73,8 @@ int main(int argc, char const *argv[]){
 				ofstream outfile("libros.bin",ios::binary | ios::app | ios::ate);
 				outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
 				outfile.close();
+				header.setRecordCount(header.getRecordCount()+1);
+				header.setDirty(true);
 
 			}else{
 				long int offset = (header.getAvailList()*sizeof(Libro)) + sizeof(Header);
@@ -107,12 +110,14 @@ int main(int argc, char const *argv[]){
 				outfile.write(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
 				outfile.close();
 				header.setDirty(true);
+				header.setRecordCount(header.getRecordCount() +1 );
+
 				
 			}
 				
 		
 		}else if(seleccionMenu==2){
-			ifstream infile("libros.bin",std::ifstream::binary);
+			ifstream infile("libros.bin",ios::binary);
 			Libro libro;
 			infile.seekg(sizeof(Header));
 			while(!infile.eof()){
@@ -203,11 +208,20 @@ int main(int argc, char const *argv[]){
 				cout<<"El tamaño del archivo es de : "<<end-begin<<" bytes"<<endl;
 			}
 			
+		}else if(seleccionMenu == 6){
+			if (header.getDirty()){
+				ofstream outfile("libros.bin",ios::binary);
+				outfile.seekp(0);
+				outfile.write(reinterpret_cast<char*>(&header),sizeof(Header));
+				outfile.close();
+			}
+			repeat = false;
 		}
 
-	}while (seleccionMenu!=6);	
+	}while (repeat);		
 		
 	return 0;
+	
 }
 
 
