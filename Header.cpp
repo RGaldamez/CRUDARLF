@@ -1,8 +1,16 @@
 #include "Header.hpp"
+#include "Libro.hpp"
 
-Header::Header(long int availList,int sizeOfCampo,int RecordCount,bool DirtyBit){
+Header::Header(){
+	this->availList = -1;
+	this->size = sizeof(Libro);
+	this->recordCount = 0;
+	this->dirtyBit = false;
+}
+
+Header::Header(long int availList,int sizeofRegistry,int RecordCount,bool DirtyBit){
 	this->availList = availList;
-	this->size = sizeOfCampo;
+	this->size = sizeofRegistry;
 	this->recordCount = RecordCount;
 	this->dirtyBit = DirtyBit;
 }

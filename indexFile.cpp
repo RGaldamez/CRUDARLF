@@ -5,6 +5,10 @@ using std::ifstream;
 using std::ofstream;
 
 
+indexFile::indexFile(){
+
+}
+
 indexFile::indexFile(char* llave,long int offset){
 	strcpy(this->llave,llave);
 	this->offset = offset; 
@@ -25,7 +29,6 @@ void indexFile::setOffset(long int offset){
 	this->offset = offset;
 }
 
-indexFile::createIndex(){
-	ifstream fileRegistros("libros.bin",ios::binary | ios::in);
-	ofstream indexFile("index.bin",ios::binary|ios::out);
+void indexFile::createIndex(){
+	
 }

@@ -3,6 +3,8 @@ using namespace std;
 
 #include "Libro.hpp"
 #include "Header.hpp"
+#include "indexFile.hpp"
+
 #include <vector>
 using std::vector;
 
@@ -22,6 +24,64 @@ int main(int argc, char const *argv[]){
 	int seleccionMenu;
 	bool headerExists = false;
 	bool repeat = true;
+	ifstream infileLibros("libros.bin",ios::binary);
+	ifstream infileIndex("index.bin",ios::binary);
+	Header tempHeader;
+	infileLibros.seekg(0);
+	infileLibros.read(reinterpret_cast<char*>(&tempHeader), sizeof(Header));
+	
+	if ((infileLibros.good() && !infileIndex.good()) 
+		|| (infileLibros.good() && infileIndex.good() && tempHeader.getDirty())){
+		vector<char*> PrimaryKeys;
+		vector<long int> offsets;
+		char tempKey[14];
+		int DIF = 9;
+		infileLibros.seekg(sizeof(Header));
+		Libro libroTemp;
+		long int contadorPos = 0;
+		while (!infileLibros.eof()){
+			infileLibros.read(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
+
+			if (!infileLibros.eof()){
+				if(libroTemp.getISBN()[7] == '-'){
+					for (int i = 0; i < 14; ++i){
+						tempKey[i] = libroTemp.getISBN()[i + DIF];
+					}
+					PrimaryKeys.push_back(new char[14]);
+					strcpy(PrimaryKeys.at(PrimaryKeys.size()-1), tempKey);
+					offsets.push_back(contadorPos*sizeof(Libro) + sizeof(Header));
+					contadorPos++;
+
+				}else{
+					contadorPos++;
+				}
+			}
+			
+			vector<indexFile*> newIndex; 
+			//indexFile* tempRegistry;
+			for (int i = 0; i < PrimaryKeys.size(); ++i){
+				newIndex.push_back(new indexFile(PrimaryKeys.at(i), offsets.at(i)));
+				//delete tempRegistry;
+
+				//char stringTemp[14];
+				//strcpy(stringTemp,PrimaryKeys.at(i));
+				//indexFile tempRegistry(stringTemp,offsets.at(i));
+				//newIndex.push_back(tempRegistry);
+			}
+			ofstream index("index.bin",ios::binary| ios::trunc | ios::out);
+			for (int i = 0; i < newIndex.size(); ++i){
+				index.write(reinterpret_cast<char*>(&newIndex.at(i)), sizeof(indexFile));
+			}
+			index.close();
+			
+
+		}
+
+	}
+
+	infileLibros.close();
+	infileIndex.close();
+
 	do {
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
@@ -155,11 +215,12 @@ int main(int argc, char const *argv[]){
 					int contador = 0;
 					if (!infile.eof() && actualISBN[0] != '*'){
 						contador++;
+						cout<<endl;
 						cout<<contador<<": ";
 						cout<<ISBNToShow<<endl;
 						cout<<libro.getNombre()<<endl;
 						cout<<libro.getAutor()<<endl;
-						cout<<libro.getEditorialID()<<endl;
+						cout<<libro.getEditorialID()<<endl<<endl;
 					}
 
 				}else{
@@ -190,6 +251,11 @@ int main(int argc, char const *argv[]){
 			
 
 		}else if (seleccionMenu==3){
+
+			//Modificar
+
+
+
 
 
 		}else if (seleccionMenu==4){
@@ -228,7 +294,7 @@ int main(int argc, char const *argv[]){
 int menu(){
 	int seleccion;
 	do{
-		cout<<"1)Escribir en un archivo"<<endl;
+		cout<<"1)Escribir en el archivo"<<endl;
 		cout<<"2)Listar registros"<<endl;
 		cout<<"3)Modificar un registro"<<endl;
 		cout<<"4)Eliminar un registro"<<endl;

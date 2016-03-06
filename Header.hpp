@@ -8,7 +8,8 @@ class Header{
 		int recordCount;
 
 	public:
-		Header(long int availList,int sizeOfCampo,int RecordCount,bool DirtyBit);
+		Header();
+		Header(long int availList,int sizeofRegistry,int RecordCount,bool DirtyBit);
 		void setAvailList(long int availList);
 		void setSize(int size);
 		void setDirty(bool Dirty);
