@@ -1,37 +1,164 @@
 #include <iostream>
 using namespace std;
 
-
 #include "Libro.hpp"
+#include "Header.hpp"
+#include "indexFile.hpp"
+
 #include <vector>
 using std::vector;
 
 #include <string>
 using std::string;
 
+#include <cstring>
+
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
+
+#include <cstdlib>
 
 
 int menu();
 int main(int argc, char const *argv[]){
 	//Editorial editoriales[30];
-
-
 	int seleccionMenu;
+	bool headerExists = false;
+	bool repeat = true;
+	bool headerDirty = false;
+	bool dirtyHeader = false;
+	bool indexExists = false;
+	Header header(-1, sizeof(Libro),0,false);
+
+	//creating index, attempt 2
+	ifstream infileLibros("libros.bin",ios::binary);
+	ifstream infileIndex("index.bin",ios::binary);
+	Header jader;
+	
+	if (infileLibros.good()){
+		infileLibros.seekg(0);
+		infileLibros.read(reinterpret_cast<char*>(&jader), sizeof(Header));
+		dirtyHeader = jader.getDirty();
+
+	}
+
+	if(infileIndex.good()){
+		indexExists = true;
+	}
+
+
+	infileLibros.close();
+	infileIndex.close();
+
+	if ((dirtyHeader && indexExists) || (dirtyHeader && !indexExists)){
+		ifstream Registry("libros.bin", ios::binary);
+		Registry.seekg(sizeof(Header));
+		Libro bookTemp;
+		vector<char*> keys;
+		vector<long int> offsets;
+		int contadorRegistros= 0;
+
+		while(!Registry.eof()){
+			Registry.read(reinterpret_cast<char*>(&bookTemp),sizeof(Libro));
+			if(!Registry.eof()){
+				if(bookTemp.getISBN()[7] == '-'){
+					keys.push_back(new char[14]);
+					char finalKey[14] ;
+					for (int i = 0; i < 13; ++i){
+						finalKey[i] = bookTemp.getISBN()[i+9];
+					}
+					finalKey[14] = '\0';
+					strcpy(keys.at(keys.size()-1),finalKey);
+					offsets.push_back(contadorRegistros*sizeof(Libro) + sizeof(header));
+					contadorRegistros++;
+
+					}else{
+						contadorRegistros++;
+					}
+				}
+					
+		}
+	
+
+		vector<indexFile*> newRegistros;
+
+		for (int i = 0; i < keys.size(); ++i){
+			newRegistros.push_back(new indexFile(keys.at(i),offsets.at(i)));
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+		ofstream indice("index.bin",ios::binary| ios::trunc | ios::out);
+		for (int i = 0; i < newRegistros.size(); ++i){
+			indice.write(reinterpret_cast<char*>(newRegistros.at(i) ),sizeof(indexFile));
+		}
+		indice.close();
+
+		for (int i = 0; i < keys.size(); ++i){
+			delete keys.at(i);
+		}
+
+		for (int i = 0; i < newRegistros.size(); ++i){
+			delete newRegistros.at(i);
+		}
+
+
+
+	}
+
+
+
+
+	
+
+	
+	
 
 	do {
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
+		ifstream infile("libros.bin",ios::binary);
+		if (!headerExists){
+			if(!infile.good()){
+				infile.close();
+				ofstream fileWrite("libros.bin",ios::binary| ios::trunc | ios::out);
+				//int availList,int sizeOfCampo,int RecordCount,bool DirtyBit
+				//fileWrite.write(reinterpret_cast<char*>(&header,sizeof(Header)));
+				fileWrite.write(reinterpret_cast<char*>(&header),sizeof(Header));
+				fileWrite.close();
+				headerExists = true;
+				
+			}else{
+				ifstream infile("libros.bin",ios::binary);			
+				infile.read(reinterpret_cast<char*>(&header),sizeof(Header));
+				infile.close();
+				headerExists = true;
+			}
+		}
+
 		if(seleccionMenu==1){
-			char ISBN [14];
+			char defaultAvail[] = "0000000-1";
+			char ISBN [23];
+			char ISBNTemp[14];
 			char Nombre[76];
 			char Autor[76];
 			unsigned int editorialID;
 			getchar();
 			cout<<"Porfavor ingrese el ISBN del libro: ";
-			cin.getline(ISBN,14);
+			cin.getline(ISBNTemp,14);
+			strcpy(ISBN,defaultAvail);
+			strcat(ISBN,ISBNTemp);
 			cout<<endl;
 			cout<<"Porfavor ingrese el nombre del libro: ";
 			cin.getline(Nombre,76);
@@ -42,56 +169,138 @@ int main(int argc, char const *argv[]){
 			cout<<"porfavor ingrese un ID: ";
 			cin>>editorialID;
 			Libro libroTemp(ISBN,Nombre,Autor,editorialID);
-			ofstream outfile("libros.bin",ios::binary | ios::app | ios::ate);
-			//streampos end;
-			//outfile.seekp(0,ios::end);
-			//end = outfile.tellp();
-			//outfile << reinterpret_cast<char*>(&libroTemp);
-			outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
-			outfile.close();
-			//cout<<"El libro fue agregardo"<<endl;
-			
-			/*
-			int hola = 1;
-			outfile.write(libroTemp.getISBN(),14);
-			outfile.write(libroTemp.getNombre(),76);	
-			outfile.write(libroTemp.getAutor(),76);
-			outfile.write(hola,sizeof(int));
-			outfile.close();
-			*/
+
+
+			if (header.getAvailList()==-1){
+				ofstream outfile("libros.bin",ios::binary | ios::app | ios::ate);
+				outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
+				outfile.close();
+				header.setRecordCount(header.getRecordCount()+1);
+				headerDirty = true;
+
+			}else{
+				long int offset = (header.getAvailList()*sizeof(Libro)) + sizeof(Header);
+				streampos pos = offset;
+				ifstream infile("libros.bin", ios::binary);
+				infile.seekg(pos);
+				Libro temp;
+				infile.read(reinterpret_cast<char*>(&temp),sizeof(Libro));
+				char deletedISBN[23];
+				strcpy(deletedISBN,temp.getISBN());
+				char newposition[7];
+
+				int contador = 0;
+				int contadorAsterisco = 0;
+				int debug;
+				while(contadorAsterisco<2){
+					if(deletedISBN[contador]=='*'){
+						contadorAsterisco++;
+					}else{
+						if(contador==1){
+							newposition[0] = deletedISBN[contador+1];
+						}else{
+							newposition[contador+1] = deletedISBN[contador];
+						}
+					}
+				}
+				//long int nuevoElementoAvail = static_cast<long int>(&newposition);
+				long int nuevoElementoAvail = (long int) newposition;
+				header.setAvailList(nuevoElementoAvail);
+
+				fstream outfile("libros.bin", ios::binary | ios::out | ios::in);
+				outfile.seekp(pos);
+				outfile.write(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
+				outfile.close();
+				headerDirty = true;
+				header.setRecordCount(header.getRecordCount()+1);
+
+				
+			}
+				
 		
 		}else if(seleccionMenu==2){
-			ifstream infile("libros.bin",std::ifstream::binary);
+			ifstream infile("libros.bin",ios::binary);
 			Libro libro;
-
+			infile.seekg(sizeof(Header));
+			int contador = 0;
 			while(!infile.eof()){
+				char actualISBN[23];
+				char ISBNfinal[14];
+				int contadorFinal=0;
+				int contadorAsterisco=0;
+				
+
 				infile.read(reinterpret_cast<char*>(&libro),sizeof(Libro));	
-				int contador = 0;
-				if (!infile.eof()){
-					contador++;
-					cout<<contador<<": ";
-					cout<<libro.getISBN()<<endl;
-					cout<<libro.getNombre()<<endl;
-					cout<<libro.getAutor()<<endl;
-					cout<<libro.getEditorialID()<<endl;
+				strcpy(actualISBN,libro.getISBN());
+
+				if (actualISBN[0] == '*'){
+					for (int i = 0; i < strlen(actualISBN); ++i){
+						if(actualISBN[i] == '*'){
+							contadorAsterisco++;
+						}
+						if(contadorAsterisco == 2){
+							ISBNfinal[contadorFinal] = actualISBN[i];
+							contadorFinal++;
+						}
+					}
 				}
+				char ISBNToShow[14];
+				int contadorToShow=0;
+				if(ISBNfinal[7] == '-'){
+					
+					for (int i = 0; i < strlen(ISBNfinal); ++i){
+						if (i>1){
+							ISBNToShow[contadorToShow] = ISBNfinal[i];
+							contadorToShow++;
+						}
+					}
+					ISBNToShow[contadorToShow] = '\0';
+					
+					if (!infile.eof() && actualISBN[0] != '*'){
+						contador++;
+						cout<<endl;
+						cout<<contador<<": ";
+						cout<< "ISBN: "<<ISBNToShow<<endl;
+						cout<<"Nombre del Libro: "<<libro.getNombre()<<endl;
+						cout<<"Autor: "<<libro.getAutor()<<endl;
+						cout<<"ID Editorial: "<<libro.getEditorialID()<<endl<<endl;
+					}
+
+				}else{
+					char ISBNToShow[14];
+					int contadorshow = 0;
+					for (int i = 0; i < strlen(libro.getISBN()); ++i){
+						if (i>8){
+							ISBNToShow[contadorshow] = libro.getISBN()[i];
+							contadorshow++;
+						}
+					}
+					if (!infile.eof() && actualISBN[0] != '*'){
+						contador++;
+						cout<<contador<<": ";
+						cout<< "ISBN: "<<ISBNToShow<<endl;
+						cout<<"Nombre del Libro: "<<libro.getNombre()<<endl;
+						cout<<"Autor: "<<libro.getAutor()<<endl;
+						cout<<"ID Editorial: "<<libro.getEditorialID()<<endl<<endl;
+					}
+
+				}
+
+					
 			}
 			infile.close();
 			
-			//while(!infile.eof()){
-
-			
-			//}
 			
 
 		}else if (seleccionMenu==3){
+
+			//Modificar
+
 
 
 
 
 		}else if (seleccionMenu==4){
-
-
 
 
 		}else if (seleccionMenu == 5){
@@ -101,31 +310,71 @@ int main(int argc, char const *argv[]){
 			infile.seekg(0,ios::end);
 			end = infile.tellg();
 			infile.close();
-			cout<<"El tamaño del archivo es de : "<<end-begin<<" bytes"<<endl;
+			if(end-begin<=1){
+				cout<<"El tamaño del archivo es de : "<<end-begin<<" byte"<<endl;
+			}else{
+				cout<<"El tamaño del archivo es de : "<<end-begin<<" bytes"<<endl;
+			}
+			
+
+
+
+		}else if(seleccionMenu == 6){
+			ifstream infile("index.bin", ios::binary);
+			indexFile index;
+			if(infile.good()){
+				while(!infile.eof()){
+					infile.read(reinterpret_cast<char*>(&index), sizeof(indexFile));
+					if(!infile.eof()){
+						cout<<endl<<"Esta es la llave: "<<index.getLlave()<<endl;
+						cout<<"este es el offset: "<<index.getOffset()<<endl;
+					}	
+				}
+				cout<<endl;
+			}else{
+				cout<<"no hay index/ el index esta corrupto";
+			
+			}
+			infile.close();
+
+
+		}else if(seleccionMenu == 7){
+			if (headerDirty){
+				fstream outfile("libros.bin",ios::binary| ios::out | ios::in);
+				cout<<header.getRecordCount()<<endl;
+				outfile.seekp(0,ios::beg);
+				header.setDirty(true);
+				outfile.write(reinterpret_cast<char*>(&header),sizeof(Header));
+
+				outfile.close();
+			}
+			repeat = false;
 		}
 
-	}while (seleccionMenu!=6);	
+	}while (repeat);		
 		
 	return 0;
+	
 }
 
 
 int menu(){
 	int seleccion;
 	do{
-		cout<<"1)Escribir en un archivo"<<endl;
+		cout<<"1)Escribir en el archivo"<<endl;
 		cout<<"2)Listar registros"<<endl;
 		cout<<"3)Modificar un registro"<<endl;
 		cout<<"4)Eliminar un registro"<<endl;
 		cout<<"5)Obtener el tamaño del archivo (opcion de desarrollo)"<<endl;
-		cout<<"6)Salir"<<endl;
+		cout<<"6)testear indice"<<endl;
+		cout<<"7)Salir"<<endl;
 		cout<<"Porfavor haga su eleccion:";
 		cin>>seleccion;
 		cout<<endl;
-		if(seleccion>6 || seleccion<1){
+		if(seleccion>7 || seleccion<1){
 			cout<<"Porfavor ingrese un numero valido"<<endl;
 		}
-	}while(seleccion>6 || seleccion<1);
+	}while(seleccion>7 || seleccion<1);
 	return seleccion;
 }
 

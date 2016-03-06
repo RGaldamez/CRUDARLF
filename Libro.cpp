@@ -22,19 +22,19 @@ Libro::~Libro(){
 }
 
 //Getters
-char* Libro::getISBN(){
+const char* Libro::getISBN(){
 	return this->ISBN;
 }
 
-char* Libro::getNombre(){
+const char* Libro::getNombre(){
 	return this->Nombre;
 }
 
-char* Libro::getAutor(){
+const char* Libro::getAutor(){
 	return this->Autor;
 }
 
-unsigned int Libro::getEditorialID(){
+const unsigned int Libro::getEditorialID(){
 	return this->EditorialID;
 }
 //Setters 
@@ -53,7 +53,7 @@ void Libro::setEditorialID(unsigned int Editorial){
 
 string Libro::toString(){
 	stringstream ss;
-	int size =14+(76*2)+sizeof(unsigned int);
+	int size =18+(76*2)+sizeof(unsigned int);
 	char temp[size];
 	ss<<this->ISBN;
 	ss<<this->Nombre;
