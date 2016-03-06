@@ -1,5 +1,5 @@
 main:	main.o Libro.o Editorial.o Header.o	indexFile.o
-	g++ main.o Libro.o Editorial.o Header.o	indexFile.o -o main
+	g++ -std=c++11 main.o Libro.o Editorial.o Header.o	indexFile.o -o main
 
 main.o:	main.cpp Libro.hpp Editorial.hpp indexFile.hpp
 	g++ -c main.cpp

@@ -17,6 +17,8 @@ using std::string;
 using std::ifstream;
 using std::ofstream;
 
+#include <cstdlib>
+
 
 int menu();
 int main(int argc, char const *argv[]){
@@ -24,85 +26,28 @@ int main(int argc, char const *argv[]){
 	int seleccionMenu;
 	bool headerExists = false;
 	bool repeat = true;
+	bool headerDirty = false;
 	ifstream infileLibros("libros.bin",ios::binary);
 	ifstream infileIndex("index.bin",ios::binary);
 	Header tempHeader;
 	infileLibros.seekg(0);
 	infileLibros.read(reinterpret_cast<char*>(&tempHeader), sizeof(Header));
-	
-	if ((infileLibros.good() && !infileIndex.good()) 
-		|| (infileLibros.good() && infileIndex.good() && tempHeader.getDirty())){
-		vector<char*> PrimaryKeys;
-		vector<long int> offsets;
-		//char PrimaryKeys[tempHeader.getRecordCount()][14];
-		//long int offsets[tempHeader.getRecordCount()];
-		char tempKey[14]; 
-		int DIF = 9;
-		Libro libroTemp;
-		long int contadorPos = 0;
-		int contadorRec = 0; 
-		while (!infileLibros.eof()){
-			infileLibros.read(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
-
-			if (!infileLibros.eof()){
-				if(libroTemp.getISBN()[7] == '-'){
-					for (int i = 0; i < 14; ++i){
-						tempKey[i] = libroTemp.getISBN()[i + DIF];
-					}
-
-
-					//strcpy(PrimaryKeys[contadorRec],tempKey);
-
-					PrimaryKeys.push_back(new char[14]);
-					strcpy(PrimaryKeys.at(PrimaryKeys.size()-1), tempKey);
-					offsets.push_back(contadorPos*sizeof(Libro) + sizeof(Header));
-					contadorPos++;
-					//contadorRec++;
-
-				}else{
-					contadorPos++;
-				}
-			}
-		}
-
-		vector<indexFile*> newIndex; 
-		//indexFile* tempRegistry;
-		cout<<"este es el tamanio: "<<PrimaryKeys.size()<<endl;
-		for (int i = 0; i < PrimaryKeys.size(); ++i){
-			newIndex.push_back(new indexFile(PrimaryKeys[i], offsets[i]));
-			//delete tempRegistry;
-
-			//char stringTemp[14];
-			//strcpy(stringTemp,PrimaryKeys.at(i));
-			//indexFile tempRegistry(stringTemp,offsets.at(i));
-			//newIndex.push_back(tempRegistry);
-		}
-		ofstream index("index.bin",ios::binary| ios::trunc | ios::out);
-		for (int i = 0; i < newIndex.size(); ++i){
-			index.write(reinterpret_cast<char*>(newIndex.at(i)), sizeof(indexFile));
-			//cout<<" Este es el indexReg: "<<newIndex.at(i)->toString()<<endl;
-
-		}
-		index.close();
-
-		for (int i = 0; i < PrimaryKeys.size(); ++i){
-			delete PrimaryKeys.at(i);
-		}
-
-		for (int i = 0; i < newIndex.size(); ++i){
-			delete newIndex.at(i);
-		}
-
-	}
-
 	infileLibros.close();
 	infileIndex.close();
+	Header header(-1, sizeof(Libro),0,false);
+
+
+
+
+	
+
+	
+	
 
 	do {
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
 		ifstream infile("libros.bin",ios::binary);
-		Header header(-1, sizeof(Libro),0,false);
 		if (!headerExists){
 			if(!infile.good()){
 				infile.close();
@@ -150,7 +95,7 @@ int main(int argc, char const *argv[]){
 				outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
 				outfile.close();
 				header.setRecordCount(header.getRecordCount()+1);
-				header.setDirty(true);
+				headerDirty = true;
 
 			}else{
 				long int offset = (header.getAvailList()*sizeof(Libro)) + sizeof(Header);
@@ -185,8 +130,8 @@ int main(int argc, char const *argv[]){
 				outfile.seekp(pos);
 				outfile.write(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
 				outfile.close();
-				header.setDirty(true);
-				header.setRecordCount(header.getRecordCount() +1 );
+				headerDirty = true;
+				header.setRecordCount(header.getRecordCount()+1);
 
 				
 			}
@@ -303,14 +248,17 @@ int main(int argc, char const *argv[]){
 					cout<<"este es el offset: "<<index.getOffset()<<endl;
 				}	
 			}
+			cout<<endl;
 			infile.close();
 
 
 		}else if(seleccionMenu == 7){
-			if (header.getDirty()){
-				ofstream outfile("libros.bin",ios::binary);
-				outfile.seekp(0);
+			if (headerDirty){
+				fstream outfile("libros.bin",ios::binary| ios::out | ios::in);
+				cout<<header.getRecordCount()<<endl;
+				outfile.seekp(0,ios::beg);
 				outfile.write(reinterpret_cast<char*>(&header),sizeof(Header));
+
 				outfile.close();
 			}
 			repeat = false;
