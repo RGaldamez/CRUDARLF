@@ -27,14 +27,95 @@ int main(int argc, char const *argv[]){
 	bool headerExists = false;
 	bool repeat = true;
 	bool headerDirty = false;
+	bool dirtyHeader = false;
+	bool indexExists = false;
+	Header header(-1, sizeof(Libro),0,false);
+
+	//creating index, attempt 2
 	ifstream infileLibros("libros.bin",ios::binary);
 	ifstream infileIndex("index.bin",ios::binary);
-	Header tempHeader;
-	infileLibros.seekg(0);
-	infileLibros.read(reinterpret_cast<char*>(&tempHeader), sizeof(Header));
+	Header jader;
+	
+	if (infileLibros.good()){
+		infileLibros.seekg(0);
+		infileLibros.read(reinterpret_cast<char*>(&jader), sizeof(Header));
+		dirtyHeader = jader.getDirty();
+
+	}
+
+	if(infileIndex.good()){
+		indexExists = true;
+	}
+
+
 	infileLibros.close();
 	infileIndex.close();
-	Header header(-1, sizeof(Libro),0,false);
+
+	if ((dirtyHeader && indexExists) || (dirtyHeader && !indexExists)){
+		ifstream Registry("libros.bin", ios::binary);
+		Registry.seekg(sizeof(Header));
+		Libro bookTemp;
+		vector<char*> keys;
+		vector<long int> offsets;
+		int contadorRegistros= 0;
+
+		while(!Registry.eof()){
+			Registry.read(reinterpret_cast<char*>(&bookTemp),sizeof(Libro));
+			if(!Registry.eof()){
+				if(bookTemp.getISBN()[7] == '-'){
+					keys.push_back(new char[14]);
+					char finalKey[14] ;
+					for (int i = 0; i < 13; ++i){
+						finalKey[i] = bookTemp.getISBN()[i+9];
+					}
+					finalKey[14] = '\0';
+					strcpy(keys.at(keys.size()-1),finalKey);
+					offsets.push_back(contadorRegistros*sizeof(Libro) + sizeof(header));
+					contadorRegistros++;
+
+					}else{
+						contadorRegistros++;
+					}
+				}
+					
+		}
+	
+
+		vector<indexFile*> newRegistros;
+
+		for (int i = 0; i < keys.size(); ++i){
+			newRegistros.push_back(new indexFile(keys.at(i),offsets.at(i)));
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+		ofstream indice("index.bin",ios::binary| ios::trunc | ios::out);
+		for (int i = 0; i < newRegistros.size(); ++i){
+			indice.write(reinterpret_cast<char*>(newRegistros.at(i) ),sizeof(indexFile));
+		}
+		indice.close();
+
+		for (int i = 0; i < keys.size(); ++i){
+			delete keys.at(i);
+		}
+
+		for (int i = 0; i < newRegistros.size(); ++i){
+			delete newRegistros.at(i);
+		}
+
+
+
+	}
 
 
 
@@ -126,7 +207,7 @@ int main(int argc, char const *argv[]){
 				long int nuevoElementoAvail = (long int) newposition;
 				header.setAvailList(nuevoElementoAvail);
 
-				ofstream outfile("libros.bin", ios::binary);
+				fstream outfile("libros.bin", ios::binary | ios::out | ios::in);
 				outfile.seekp(pos);
 				outfile.write(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
 				outfile.close();
@@ -179,10 +260,10 @@ int main(int argc, char const *argv[]){
 						contador++;
 						cout<<endl;
 						cout<<contador<<": ";
-						cout<<ISBNToShow<<endl;
-						cout<<libro.getNombre()<<endl;
-						cout<<libro.getAutor()<<endl;
-						cout<<libro.getEditorialID()<<endl<<endl;
+						cout<< "ISBN: "<<ISBNToShow<<endl;
+						cout<<"Nombre del Libro: "<<libro.getNombre()<<endl;
+						cout<<"Autor: "<<libro.getAutor()<<endl;
+						cout<<"ID Editorial: "<<libro.getEditorialID()<<endl<<endl;
 					}
 
 				}else{
@@ -197,10 +278,10 @@ int main(int argc, char const *argv[]){
 					if (!infile.eof() && actualISBN[0] != '*'){
 						contador++;
 						cout<<contador<<": ";
-						cout<<ISBNToShow<<endl;
-						cout<<libro.getNombre()<<endl;
-						cout<<libro.getAutor()<<endl;
-						cout<<libro.getEditorialID()<<endl;
+						cout<< "ISBN: "<<ISBNToShow<<endl;
+						cout<<"Nombre del Libro: "<<libro.getNombre()<<endl;
+						cout<<"Autor: "<<libro.getAutor()<<endl;
+						cout<<"ID Editorial: "<<libro.getEditorialID()<<endl<<endl;
 					}
 
 				}
@@ -241,14 +322,19 @@ int main(int argc, char const *argv[]){
 		}else if(seleccionMenu == 6){
 			ifstream infile("index.bin", ios::binary);
 			indexFile index;
-			while(!infile.eof()){
-				infile.read(reinterpret_cast<char*>(&index), sizeof(indexFile));
-				if(!infile.eof()){
-					cout<<endl<<"Esta es la llave: "<<index.getLlave()<<endl;
-					cout<<"este es el offset: "<<index.getOffset()<<endl;
-				}	
+			if(infile.good()){
+				while(!infile.eof()){
+					infile.read(reinterpret_cast<char*>(&index), sizeof(indexFile));
+					if(!infile.eof()){
+						cout<<endl<<"Esta es la llave: "<<index.getLlave()<<endl;
+						cout<<"este es el offset: "<<index.getOffset()<<endl;
+					}	
+				}
+				cout<<endl;
+			}else{
+				cout<<"no hay index/ el index esta corrupto";
+			
 			}
-			cout<<endl;
 			infile.close();
 
 
@@ -257,6 +343,7 @@ int main(int argc, char const *argv[]){
 				fstream outfile("libros.bin",ios::binary| ios::out | ios::in);
 				cout<<header.getRecordCount()<<endl;
 				outfile.seekp(0,ios::beg);
+				header.setDirty(true);
 				outfile.write(reinterpret_cast<char*>(&header),sizeof(Header));
 
 				outfile.close();
