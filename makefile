@@ -18,4 +18,4 @@ indexFile.o:	indexFile.cpp	indexFile.hpp
 
 
 clean:
-	rm *.o main	libros.bin
+	rm *.o main	libros.bin	index.bin

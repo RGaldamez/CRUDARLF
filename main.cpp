@@ -34,11 +34,13 @@ int main(int argc, char const *argv[]){
 		|| (infileLibros.good() && infileIndex.good() && tempHeader.getDirty())){
 		vector<char*> PrimaryKeys;
 		vector<long int> offsets;
-		char tempKey[14];
+		//char PrimaryKeys[tempHeader.getRecordCount()][14];
+		//long int offsets[tempHeader.getRecordCount()];
+		char tempKey[14]; 
 		int DIF = 9;
-		infileLibros.seekg(sizeof(Header));
 		Libro libroTemp;
 		long int contadorPos = 0;
+		int contadorRec = 0; 
 		while (!infileLibros.eof()){
 			infileLibros.read(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
 
@@ -47,34 +49,48 @@ int main(int argc, char const *argv[]){
 					for (int i = 0; i < 14; ++i){
 						tempKey[i] = libroTemp.getISBN()[i + DIF];
 					}
+
+
+					//strcpy(PrimaryKeys[contadorRec],tempKey);
+
 					PrimaryKeys.push_back(new char[14]);
 					strcpy(PrimaryKeys.at(PrimaryKeys.size()-1), tempKey);
 					offsets.push_back(contadorPos*sizeof(Libro) + sizeof(Header));
 					contadorPos++;
+					//contadorRec++;
 
 				}else{
 					contadorPos++;
 				}
 			}
-			
-			vector<indexFile*> newIndex; 
-			//indexFile* tempRegistry;
-			for (int i = 0; i < PrimaryKeys.size(); ++i){
-				newIndex.push_back(new indexFile(PrimaryKeys.at(i), offsets.at(i)));
-				//delete tempRegistry;
+		}
 
-				//char stringTemp[14];
-				//strcpy(stringTemp,PrimaryKeys.at(i));
-				//indexFile tempRegistry(stringTemp,offsets.at(i));
-				//newIndex.push_back(tempRegistry);
-			}
-			ofstream index("index.bin",ios::binary| ios::trunc | ios::out);
-			for (int i = 0; i < newIndex.size(); ++i){
-				index.write(reinterpret_cast<char*>(&newIndex.at(i)), sizeof(indexFile));
-			}
-			index.close();
-			
+		vector<indexFile*> newIndex; 
+		//indexFile* tempRegistry;
+		cout<<"este es el tamanio: "<<PrimaryKeys.size()<<endl;
+		for (int i = 0; i < PrimaryKeys.size(); ++i){
+			newIndex.push_back(new indexFile(PrimaryKeys[i], offsets[i]));
+			//delete tempRegistry;
 
+			//char stringTemp[14];
+			//strcpy(stringTemp,PrimaryKeys.at(i));
+			//indexFile tempRegistry(stringTemp,offsets.at(i));
+			//newIndex.push_back(tempRegistry);
+		}
+		ofstream index("index.bin",ios::binary| ios::trunc | ios::out);
+		for (int i = 0; i < newIndex.size(); ++i){
+			index.write(reinterpret_cast<char*>(newIndex.at(i)), sizeof(indexFile));
+			//cout<<" Este es el indexReg: "<<newIndex.at(i)->toString()<<endl;
+
+		}
+		index.close();
+
+		for (int i = 0; i < PrimaryKeys.size(); ++i){
+			delete PrimaryKeys.at(i);
+		}
+
+		for (int i = 0; i < newIndex.size(); ++i){
+			delete newIndex.at(i);
 		}
 
 	}
@@ -180,6 +196,7 @@ int main(int argc, char const *argv[]){
 			ifstream infile("libros.bin",ios::binary);
 			Libro libro;
 			infile.seekg(sizeof(Header));
+			int contador = 0;
 			while(!infile.eof()){
 				char actualISBN[23];
 				char ISBNfinal[14];
@@ -212,7 +229,7 @@ int main(int argc, char const *argv[]){
 						}
 					}
 					ISBNToShow[contadorToShow] = '\0';
-					int contador = 0;
+					
 					if (!infile.eof() && actualISBN[0] != '*'){
 						contador++;
 						cout<<endl;
@@ -232,7 +249,6 @@ int main(int argc, char const *argv[]){
 							contadorshow++;
 						}
 					}
-					int contador = 0;
 					if (!infile.eof() && actualISBN[0] != '*'){
 						contador++;
 						cout<<contador<<": ";
@@ -274,7 +290,23 @@ int main(int argc, char const *argv[]){
 				cout<<"El tamaño del archivo es de : "<<end-begin<<" bytes"<<endl;
 			}
 			
+
+
+
 		}else if(seleccionMenu == 6){
+			ifstream infile("index.bin", ios::binary);
+			indexFile index;
+			while(!infile.eof()){
+				infile.read(reinterpret_cast<char*>(&index), sizeof(indexFile));
+				if(!infile.eof()){
+					cout<<endl<<"Esta es la llave: "<<index.getLlave()<<endl;
+					cout<<"este es el offset: "<<index.getOffset()<<endl;
+				}	
+			}
+			infile.close();
+
+
+		}else if(seleccionMenu == 7){
 			if (header.getDirty()){
 				ofstream outfile("libros.bin",ios::binary);
 				outfile.seekp(0);
@@ -299,14 +331,15 @@ int menu(){
 		cout<<"3)Modificar un registro"<<endl;
 		cout<<"4)Eliminar un registro"<<endl;
 		cout<<"5)Obtener el tamaño del archivo (opcion de desarrollo)"<<endl;
-		cout<<"6)Salir"<<endl;
+		cout<<"6)testear indice"<<endl;
+		cout<<"7)Salir"<<endl;
 		cout<<"Porfavor haga su eleccion:";
 		cin>>seleccion;
 		cout<<endl;
-		if(seleccion>6 || seleccion<1){
+		if(seleccion>7 || seleccion<1){
 			cout<<"Porfavor ingrese un numero valido"<<endl;
 		}
-	}while(seleccion>6 || seleccion<1);
+	}while(seleccion>7 || seleccion<1);
 	return seleccion;
 }
 

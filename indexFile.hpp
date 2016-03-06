@@ -1,4 +1,6 @@
 #pragma once 
+#include <string>
+using std::string;
 
 class indexFile{
 private:
@@ -13,4 +15,5 @@ public:
 	void setLlave(char*);
 	void setOffset(long int);
 	void createIndex();
+	const string toString();
 };

@@ -1,5 +1,11 @@
 #include "indexFile.hpp"
 #include <cstring>
+#include <string>
+#include <sstream>
+
+using std::string;
+using std::stringstream;
+
 #include <fstream>
 using std::ifstream;
 using std::ofstream;
@@ -31,4 +37,10 @@ void indexFile::setOffset(long int offset){
 
 void indexFile::createIndex(){
 	
+}
+
+const string indexFile::toString(){
+	stringstream ss;
+	ss<<this->llave <<" "<< this->offset;
+	return ss.str();
 }
