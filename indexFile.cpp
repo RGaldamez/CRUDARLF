@@ -44,3 +44,9 @@ const string indexFile::toString(){
 	ss<<this->llave <<" "<< this->offset;
 	return ss.str();
 }
+
+const indexFile& indexFile::operator=(const indexFile& newindex){
+	strcpy(this->llave,newindex.llave);
+	this->offset = newindex.offset;
+	return *this;
+}

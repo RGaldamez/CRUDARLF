@@ -87,7 +87,69 @@ int main(int argc, char const *argv[]){
 			newRegistros.push_back(new indexFile(keys.at(i),offsets.at(i)));
 		}
 
+		//ORDENANDO LA LISTA DE newRegistros
+		long int key1;
+		long int key2;
+		char keyTemp[14];
+		long int offsetTemp;
+		bool isI;
+		bool isJ;
+		indexFile indexTemp;
+		vector<int> erasedPos;
+		if(newRegistros.size()>1){
+			for (int i = 0; i < newRegistros.size()-1; ++i){
+				for (int j = 1; j < newRegistros.size(); ++j){
+						
+					key1 = atol(newRegistros.at(i)->getLlave());
+					key2 = atol(newRegistros.at(j)->getLlave());
 
+					if(key2<key1){
+						//indexTemp = *newRegistros.at(i);
+						//newRegistros.at(i) = newRegistros.at(j);
+						//&newRegistros.at(j) = indexTemp;
+						strcpy(keyTemp,newRegistros.at(i)->getLlave());
+						//cout<<"Este es el KeyTemp: "<<keyTemp<<endl;
+						offsetTemp = newRegistros.at(i)->getOffset();
+						//cout<<"Este es su offset: "<<offsetTemp<<endl;
+						delete newRegistros.at(i);
+						newRegistros.at(i) = new indexFile(newRegistros.at(j)->getLlave(),newRegistros.at(j)->getOffset());
+						delete newRegistros.at(j);
+						newRegistros.at(j) = new indexFile(keyTemp,offsetTemp);
+
+
+
+
+
+
+						/*
+						isI = false;
+						isJ = false;
+						for (int k = 0; k < erasedPos.size(); ++k){
+							if(i == erasedPos.at(k)){
+								isI = true;
+								break;
+							}
+						}
+						for (int k = 0; k < erasedPos.size(); ++k){
+							if(j == erasedPos.at(k)){
+								isJ = true;
+								break;
+							}
+						}
+
+						if(!isI){
+							erasedPos.push_back(i);
+						}
+						if(!isJ){
+							erasedPos.push_back(j);
+						}
+						*/
+					}
+				}	
+			}
+		}
+
+			
 
 
 
@@ -108,22 +170,30 @@ int main(int argc, char const *argv[]){
 		for (int i = 0; i < keys.size(); ++i){
 			delete keys.at(i);
 		}
+		//bool deleteR;
+		//for (int i = 0; i < newRegistros.size(); ++i){
+			/*deleteR = true;
+			for (int j = 0; j < erasedPos.size(); ++j){
+				if(i == erasedPos.at(j)){
+					deleteR = false;
+					break;
+				}
+			}
+			if(deleteR){
+				delete newRegistros.at(i);
+			}
+			*/
+		//	delete newRegistros.at(i);
+		//}
+			for (int i = 0; i < newRegistros.size(); ++i){
+				delete newRegistros.at(i);
+			}
 
-		for (int i = 0; i < newRegistros.size(); ++i){
-			delete newRegistros.at(i);
-		}
 
 
 
 	}
 
-
-
-
-	
-
-	
-	
 
 	do {
 		seleccionMenu = menu();
@@ -295,6 +365,23 @@ int main(int argc, char const *argv[]){
 		}else if (seleccionMenu==3){
 
 			//Modificar
+			char busquedaLibro[14]
+			cout<<endl<<"Porfavor ingrese el ISBN del libro que desea modificar: ";
+			cin.getline(busquedaLibro,14);
+			ifstream index("index.bin",ios::binary|ios::in);
+			indexFile indexTemp;
+			long int offset;
+			while(!index.eof()){
+				index.read(reinterpret_cast<char*>(&indexTemp),sizeof(indexFile));
+				if(!index.eof()){
+					if(strcmp(busquedaLibro,indexTemp.getLlave()) == 0){
+						cout<<"Se encontro el Libro: "<<endl;
+						offset = indexTemp.getOffset();
+						break;
+					}
+				}
+			}
+
 
 
 
@@ -342,7 +429,7 @@ int main(int argc, char const *argv[]){
 			if (headerDirty){
 				fstream outfile("libros.bin",ios::binary| ios::out | ios::in);
 				cout<<header.getRecordCount()<<endl;
-				outfile.seekp(0,ios::beg);
+				outfile.seekp(0);
 				header.setDirty(true);
 				outfile.write(reinterpret_cast<char*>(&header),sizeof(Header));
 
