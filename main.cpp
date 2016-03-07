@@ -35,23 +35,21 @@ int main(int argc, char const *argv[]){
 	ifstream infileLibros("libros.bin",ios::binary);
 	ifstream infileIndex("index.bin",ios::binary);
 	Header jader;
-	
+	int aHierro = 0;
 	if (infileLibros.good()){
 		infileLibros.seekg(0);
 		infileLibros.read(reinterpret_cast<char*>(&jader), sizeof(Header));
 		dirtyHeader = jader.getDirty();
-
+		if (dirtyHeader == true){
+			aHierro = 1;
+		}
 	}
-
-	if(infileIndex.good()){
-		indexExists = true;
-	}
-
 
 	infileLibros.close();
 	infileIndex.close();
 
-	if ((dirtyHeader && indexExists) || (dirtyHeader && !indexExists)){
+	if (aHierro == 1){
+		cout<<"Creando Index..."<<endl;
 		ifstream Registry("libros.bin", ios::binary);
 		Registry.seekg(sizeof(Header));
 		Libro bookTemp;
@@ -149,17 +147,6 @@ int main(int argc, char const *argv[]){
 			}
 		}
 
-			
-
-
-
-
-
-
-
-
-
-
 
 		ofstream indice("index.bin",ios::binary| ios::trunc | ios::out);
 		for (int i = 0; i < newRegistros.size(); ++i){
@@ -194,7 +181,8 @@ int main(int argc, char const *argv[]){
 
 	}
 
-
+	bool RealDirty = false;
+	int contadorAle = 0;
 	do {
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
@@ -218,6 +206,7 @@ int main(int argc, char const *argv[]){
 		}
 
 		if(seleccionMenu==1){
+			contadorAle++;
 			char defaultAvail[] = "0000000-1";
 			char ISBN [23];
 			char ISBNTemp[14];
@@ -247,6 +236,7 @@ int main(int argc, char const *argv[]){
 				outfile.close();
 				header.setRecordCount(header.getRecordCount()+1);
 				headerDirty = true;
+				RealDirty = true;
 
 			}else{
 				long int offset = (header.getAvailList()*sizeof(Libro)) + sizeof(Header);
@@ -283,6 +273,7 @@ int main(int argc, char const *argv[]){
 				outfile.close();
 				headerDirty = true;
 				header.setRecordCount(header.getRecordCount()+1);
+				RealDirty = true;
 
 				
 			}
@@ -365,21 +356,30 @@ int main(int argc, char const *argv[]){
 		}else if (seleccionMenu==3){
 
 			//Modificar
-			char busquedaLibro[14]
+			char busquedaLibro[14];
 			cout<<endl<<"Porfavor ingrese el ISBN del libro que desea modificar: ";
 			cin.getline(busquedaLibro,14);
 			ifstream index("index.bin",ios::binary|ios::in);
 			indexFile indexTemp;
 			long int offset;
+			bool found = false;
 			while(!index.eof()){
 				index.read(reinterpret_cast<char*>(&indexTemp),sizeof(indexFile));
 				if(!index.eof()){
 					if(strcmp(busquedaLibro,indexTemp.getLlave()) == 0){
 						cout<<"Se encontro el Libro: "<<endl;
 						offset = indexTemp.getOffset();
+						found = true;
 						break;
 					}
 				}
+			}
+			index.close();
+
+			if(found){
+
+			}else{
+				cout<<"Lo siento no pude encontrar ese libro :( "<<endl;
 			}
 
 
@@ -419,7 +419,7 @@ int main(int argc, char const *argv[]){
 				}
 				cout<<endl;
 			}else{
-				cout<<"no hay index/ el index esta corrupto";
+				cout<<"no hay index/ el index esta corrupto"<<endl;
 			
 			}
 			infile.close();
@@ -428,11 +428,15 @@ int main(int argc, char const *argv[]){
 		}else if(seleccionMenu == 7){
 			if (headerDirty){
 				fstream outfile("libros.bin",ios::binary| ios::out | ios::in);
-				cout<<header.getRecordCount()<<endl;
 				outfile.seekp(0);
 				header.setDirty(true);
 				outfile.write(reinterpret_cast<char*>(&header),sizeof(Header));
-
+				outfile.close();
+			}else{
+				fstream outfile("libros.bin",ios::binary| ios::out | ios::in);
+				outfile.seekp(0);
+				header.setDirty(false);
+				outfile.write(reinterpret_cast<char*>(&header),sizeof(Header));
 				outfile.close();
 			}
 			repeat = false;
