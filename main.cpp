@@ -213,7 +213,7 @@ int main(int argc, char const *argv[]){
 			char Nombre[76];
 			char Autor[76];
 			unsigned int editorialID;
-			getchar();
+			cin.ignore();
 			cout<<"Porfavor ingrese el ISBN del libro: ";
 			cin.getline(ISBNTemp,14);
 			strcpy(ISBN,defaultAvail);
@@ -330,11 +330,16 @@ int main(int argc, char const *argv[]){
 				}else{
 					char ISBNToShow[14];
 					int contadorshow = 0;
+					/*
 					for (int i = 0; i < strlen(libro.getISBN()); ++i){
 						if (i>8){
 							ISBNToShow[contadorshow] = libro.getISBN()[i];
 							contadorshow++;
 						}
+					}
+					*/
+					for (int i = 0; i < 13; ++i){
+						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
 					if (!infile.eof() && actualISBN[0] != '*'){
 						contador++;
@@ -358,7 +363,9 @@ int main(int argc, char const *argv[]){
 			//Modificar
 			char busquedaLibro[14];
 			cout<<endl<<"Porfavor ingrese el ISBN del libro que desea modificar: ";
+			cin.ignore();
 			cin.getline(busquedaLibro,14);
+			cout<<endl;
 			ifstream index("index.bin",ios::binary|ios::in);
 			indexFile indexTemp;
 			long int offset;
@@ -377,15 +384,84 @@ int main(int argc, char const *argv[]){
 			index.close();
 
 			if(found){
+				Libro actual;
+				ifstream libroFile("libros.bin", ios::binary | ios::in);
+				libroFile.seekg(offset);
+				libroFile.read(reinterpret_cast<char*>(&actual), sizeof(Libro));
+				char toShow[14];
+				int eleccionMod;
+				for (int i = 0; i < 14; ++i){
+					toShow[i] = actual.getISBN()[i+9];
+				}
 
+				cout<< "ISBN: "<<toShow<<endl;
+				cout<<"Nombre del Libro: "<<actual.getNombre()<<endl;
+				cout<<"Autor: "<<actual.getAutor()<<endl;
+				cout<<"ID Editorial: "<<actual.getEditorialID()<<endl<<endl;
+
+				cout<<"Desea cambiar el ISBN junto a los otros datos? "<<endl;
+				cout<<"1) Si"<<endl;
+				cout<<"2) No"<<endl;
+				cin>>eleccionMod;
+				if(eleccionMod == 1){
+					char ISBNTemp[14];
+					char TempNombre[76];
+					char TempAutor[76];
+					unsigned int TempEditorial;
+					cin.ignore();
+					cout<<"Porfavor ingrese el ISBN del libro: ";
+					cin.getline(ISBNTemp,14);
+					char temptemp[23];
+					strcpy(temptemp, actual.getISBN());
+					for (int i = 0; i < 14; ++i){
+						temptemp[i+9] = ISBNTemp[i];
+					}
+					actual.setISBN(temptemp);
+					cout<<endl;
+					cout<<"Porfavor ingrese el nombre del libro: ";
+					cin.getline(TempNombre,76);
+					cout<<endl;
+					cout<<"Porfavor ingrese el nombre del autor del libro: ";
+					cin.getline(TempAutor,76);
+					cout<<endl;
+					cout<<"porfavor ingrese un ID: ";
+					cin>>TempEditorial;
+					actual.setNombre(TempNombre);
+					actual.setAutor(TempAutor);
+					actual.setEditorialID(TempEditorial);
+
+					fstream bookMod("libros.bin", ios::binary | ios::in | ios::out);
+					bookMod.seekp(offset);
+					bookMod.write(reinterpret_cast<char*>(&actual), sizeof(Libro));
+					bookMod.close();
+					headerDirty = true;
+				}else{
+					char TempNombre[76];
+					char TempAutor[76];
+					unsigned int TempEditorial;
+					cin.ignore();
+					cout<<endl;
+					cout<<"Porfavor ingrese el nombre del libro: ";
+					cin.getline(TempNombre,76);
+					cout<<endl;
+					cout<<"Porfavor ingrese el nombre del autor del libro: ";
+					cin.getline(TempAutor,76);
+					cout<<endl;
+					cout<<"porfavor ingrese un ID: ";
+					cin>>TempEditorial;
+					actual.setNombre(TempNombre);
+					actual.setAutor(TempAutor);
+					actual.setEditorialID(TempEditorial);
+					cout<<"temp editorial: "<<actual.getEditorialID()<<endl;
+
+					fstream bookMod("libros.bin", ios::binary | ios::in | ios::out);
+					bookMod.seekp(offset);
+					bookMod.write(reinterpret_cast<char*>(&actual), sizeof(Libro));
+					bookMod.close();
+				}
 			}else{
 				cout<<"Lo siento no pude encontrar ese libro :( "<<endl;
 			}
-
-
-
-
-
 
 		}else if (seleccionMenu==4){
 
@@ -452,6 +528,7 @@ int main(int argc, char const *argv[]){
 int menu(){
 	int seleccion;
 	do{
+		cout<<endl;
 		cout<<"1)Escribir en el archivo"<<endl;
 		cout<<"2)Listar registros"<<endl;
 		cout<<"3)Modificar un registro"<<endl;

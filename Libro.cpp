@@ -48,7 +48,7 @@ void Libro::setAutor(char* Autor){
 	strcpy(this->Autor, Autor);
 }
 void Libro::setEditorialID(unsigned int Editorial){
-	this->EditorialID = EditorialID;
+	this->EditorialID = Editorial;
 }
 
 string Libro::toString(){
