@@ -19,6 +19,11 @@ using std::ofstream;
 
 #include <cstdlib>
 
+#include <cstdio>
+using std::rename;
+
+#include <ctime>
+
 
 int menu();
 int main(int argc, char const *argv[]){
@@ -60,7 +65,7 @@ int main(int argc, char const *argv[]){
 		while(!Registry.eof()){
 			Registry.read(reinterpret_cast<char*>(&bookTemp),sizeof(Libro));
 			if(!Registry.eof()){
-				if(bookTemp.getISBN()[7] == '-'){
+				if(!bookTemp.getDeleted()){
 					keys.push_back(new char[14]);
 					char finalKey[14] ;
 					for (int i = 0; i < 13; ++i){
@@ -150,7 +155,7 @@ int main(int argc, char const *argv[]){
 
 		ofstream indice("index.bin",ios::binary| ios::trunc | ios::out);
 		for (int i = 0; i < newRegistros.size(); ++i){
-			indice.write(reinterpret_cast<char*>(newRegistros.at(i) ),sizeof(indexFile));
+			indice.write(reinterpret_cast<char*>(newRegistros.at(i)),sizeof(indexFile));
 		}
 		indice.close();
 
@@ -294,7 +299,7 @@ int main(int argc, char const *argv[]){
 				infile.read(reinterpret_cast<char*>(&libro),sizeof(Libro));	
 				strcpy(actualISBN,libro.getISBN());
 
-				if (actualISBN[0] == '*'){
+				/*if (actualISBN[0] == '*'){
 					for (int i = 0; i < strlen(actualISBN); ++i){
 						if(actualISBN[i] == '*'){
 							contadorAsterisco++;
@@ -305,17 +310,14 @@ int main(int argc, char const *argv[]){
 						}
 					}
 				}
+				*/
 				char ISBNToShow[14];
 				int contadorToShow=0;
 				if(ISBNfinal[7] == '-'){
-					
-					for (int i = 0; i < strlen(ISBNfinal); ++i){
-						if (i>1){
-							ISBNToShow[contadorToShow] = ISBNfinal[i];
-							contadorToShow++;
-						}
+					for (int i = 0; i < 13; ++i){
+						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
-					ISBNToShow[contadorToShow] = '\0';
+					
 					
 					if (!infile.eof() && actualISBN[0] != '*'){
 						contador++;
@@ -341,7 +343,7 @@ int main(int argc, char const *argv[]){
 					for (int i = 0; i < 13; ++i){
 						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
-					if (!infile.eof() && actualISBN[0] != '*'){
+					if (!infile.eof() && !libro.getDeleted()){
 						contador++;
 						cout<<contador<<": ";
 						cout<< "ISBN: "<<ISBNToShow<<endl;
@@ -465,6 +467,60 @@ int main(int argc, char const *argv[]){
 
 		}else if (seleccionMenu==4){
 
+			char busquedaLibro[14];
+			cout<<endl<<"Porfavor ingrese el ISBN del libro que desea eliminar: ";
+			cin.ignore();
+			cin.getline(busquedaLibro,14);
+			cout<<endl;
+			ifstream index("index.bin",ios::binary|ios::in);
+			indexFile indexTemp;
+			long int offset;
+			bool found = false;
+			while(!index.eof()){
+				index.read(reinterpret_cast<char*>(&indexTemp),sizeof(indexFile));
+				if(!index.eof()){
+					if(strcmp(busquedaLibro,indexTemp.getLlave()) == 0){
+						cout<<"Se encontro el Libro: "<<endl;
+						offset = indexTemp.getOffset();
+						found = true;
+						break;
+					}
+				}
+			}
+			index.close();
+			if (found){
+				int erase;
+				Libro actual;
+				ifstream libroFile("libros.bin", ios::binary | ios::in);
+				libroFile.seekg(offset);
+				libroFile.read(reinterpret_cast<char*>(&actual), sizeof(Libro));
+				libroFile.close();
+				char toShow[14];
+				int eleccionMod;
+				for (int i = 0; i < 14; ++i){
+					toShow[i] = actual.getISBN()[i+9];
+				}
+
+				cout<< "ISBN: "<<toShow<<endl;
+				cout<<"Nombre del Libro: "<<actual.getNombre()<<endl;
+				cout<<"Autor: "<<actual.getAutor()<<endl;
+				cout<<"ID Editorial: "<<actual.getEditorialID()<<endl<<endl;
+
+				cout<<endl<<"De verdad quiere borrar este libro?"<<endl;
+				cout<<"1) SI"<<endl;
+				cout<<"2) NO"<<endl;
+				cin >> erase;
+
+				if(erase){
+					fstream borrar("libros.bin", ios::binary| ios::in | ios::out);
+					borrar.seekg(offset);
+					actual.setDeleted(true);
+					borrar.write(reinterpret_cast<char*>(&actual), sizeof(Libro));
+					borrar.close();
+				}
+
+			}
+			headerDirty = true;
 
 		}else if (seleccionMenu == 5){
 			streampos begin, end;
@@ -502,6 +558,28 @@ int main(int argc, char const *argv[]){
 
 
 		}else if(seleccionMenu == 7){
+			Libro temp;
+			ofstream compact("libros2.bin", ios::binary | ios::out | ios::trunc);
+			compact.write(reinterpret_cast<char*>(&header), sizeof(Header));
+			ifstream original("libros.bin", ios::binary | ios::in);
+			original.seekg(sizeof(Header));
+			compact.seekp(sizeof(Header));
+			while (!original.eof()){
+				original.read(reinterpret_cast<char*>(&temp), sizeof(Libro));
+				if (!original.eof() && !temp.getDeleted()){
+					compact.write(reinterpret_cast<char*>(&temp), sizeof(Libro));
+				}
+			}
+			compact.close();
+			original.close();
+			int successf=remove("libros.bin");
+			rename("libros2.bin","libros.bin");
+			headerDirty = true;
+
+			
+		}else if(seleccionMenu == 8){
+
+		}else if(seleccionMenu == 9){
 			if (headerDirty){
 				fstream outfile("libros.bin",ios::binary| ios::out | ios::in);
 				outfile.seekp(0);
@@ -516,6 +594,7 @@ int main(int argc, char const *argv[]){
 				outfile.close();
 			}
 			repeat = false;
+
 		}
 
 	}while (repeat);		
@@ -523,6 +602,7 @@ int main(int argc, char const *argv[]){
 	return 0;
 	
 }
+
 
 
 int menu(){
@@ -535,14 +615,16 @@ int menu(){
 		cout<<"4)Eliminar un registro"<<endl;
 		cout<<"5)Obtener el tamaño del archivo (opcion de desarrollo)"<<endl;
 		cout<<"6)testear indice"<<endl;
-		cout<<"7)Salir"<<endl;
+		cout<<"7)Compactar Archivo"<<endl;
+		cout<<"8)Generar Libros"<<endl;
+		cout<<"9)Salir"<<endl;
 		cout<<"Porfavor haga su eleccion:";
 		cin>>seleccion;
 		cout<<endl;
-		if(seleccion>7 || seleccion<1){
+		if(seleccion>9 || seleccion<1){
 			cout<<"Porfavor ingrese un numero valido"<<endl;
 		}
-	}while(seleccion>7 || seleccion<1);
+	}while(seleccion>9 || seleccion<1);
 	return seleccion;
 }
 

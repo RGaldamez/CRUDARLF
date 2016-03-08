@@ -11,12 +11,14 @@ class Libro{
 		~Libro();
 
 		//Getters
+		const bool getDeleted();
 		const char* getISBN();
 		const char* getNombre();
 		const char* getAutor();
 		const unsigned int getEditorialID();
 
 		//Setters
+		void setDeleted(bool deleted);
 		void setISBN(char* ISBN);
 		void setNombre(char* Nombre);
 		void setAutor(char* Autor);
@@ -29,4 +31,5 @@ class Libro{
 		char Nombre[76];
 		char Autor[76];
 		unsigned int EditorialID;
+		bool Deleted;
 };
