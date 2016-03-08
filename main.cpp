@@ -314,7 +314,7 @@ int main(int argc, char const *argv[]){
 				char ISBNToShow[14];
 				int contadorToShow=0;
 				if(ISBNfinal[7] == '-'){
-					for (int i = 0; i < 13; ++i){
+					for (int i = 0; i < 14; ++i){
 						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
 					ISBNToShow[14] = '\0';
@@ -341,7 +341,7 @@ int main(int argc, char const *argv[]){
 						}
 					}
 					*/
-					for (int i = 0; i < 13; ++i){
+					for (int i = 0; i < 14; ++i){
 						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
 					ISBNToShow[14] = '\0';
