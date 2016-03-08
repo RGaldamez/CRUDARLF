@@ -2,7 +2,7 @@ main:	main.o Libro.o Editorial.o Header.o	indexFile.o
 	g++ -std=c++11 main.o Libro.o Editorial.o Header.o indexFile.o -o main
 
 main.o:	main.cpp Libro.hpp Editorial.hpp indexFile.hpp
-	g++ -c main.cpp
+	g++ -std=c++11 -c main.cpp
 
 Libro.o: Libro.cpp Libro.hpp
 	g++ -c Libro.cpp
