@@ -317,6 +317,7 @@ int main(int argc, char const *argv[]){
 					for (int i = 0; i < 13; ++i){
 						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
+					ISBNToShow[14] = '\0';
 					
 					
 					if (!infile.eof() && actualISBN[0] != '*'){
@@ -343,6 +344,7 @@ int main(int argc, char const *argv[]){
 					for (int i = 0; i < 13; ++i){
 						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
+					ISBNToShow[14] = '\0';
 					if (!infile.eof() && !libro.getDeleted()){
 						contador++;
 						cout<<contador<<": ";
@@ -395,6 +397,7 @@ int main(int argc, char const *argv[]){
 				for (int i = 0; i < 14; ++i){
 					toShow[i] = actual.getISBN()[i+9];
 				}
+				toShow[14] = '\0';
 
 				cout<< "ISBN: "<<toShow<<endl;
 				cout<<"Nombre del Libro: "<<actual.getNombre()<<endl;
@@ -500,6 +503,7 @@ int main(int argc, char const *argv[]){
 				for (int i = 0; i < 14; ++i){
 					toShow[i] = actual.getISBN()[i+9];
 				}
+				toShow[14] = '\0';
 
 				cout<< "ISBN: "<<toShow<<endl;
 				cout<<"Nombre del Libro: "<<actual.getNombre()<<endl;
@@ -578,6 +582,60 @@ int main(int argc, char const *argv[]){
 
 			
 		}else if(seleccionMenu == 8){
+			int cantidadAGenerar;
+			cout<<"Cuantos Libros desea generar?: ";
+			cin>>cantidadAGenerar;
+			cout<<endl;
+
+
+			srand(time(0));
+			char PrimerNombre[20][25] = {"The Famous", "The Dead","The Dangerous","The","The Amazing",
+			"The Perfect","The Inconvenient","The Terrible","The Sexy","The Scary","The Horrid",
+			"The Lovely","The Useless","The Skinny","The Obese","The Animated","The Ambivalent",
+			"The Plastic","The Motorized"};
+
+			char SegundoNombre[20][30] = {" Hands"," Spine"," Spoon", " Knife", " Glass", " Spray", " Crime",
+			" Dog"," Cat", " Mammal", " Computer", " Key", " Doctor", " Engineer", " Teacher", " Cheese",
+			" Beer", " Television", " Cellphone"};
+
+			char autores[20][60] = {"Angelina Jolie", "Brad Pitt", "Channing Tatum", "Edward Norton",
+			"Hillary Clinton", "Nicolas Cage", "Robert DeNiro", "Dakota Fanning", "John Travolta", 
+			"Katy Perry", "Scarlett Johansson", "Jennifer Lawrence", "Leonardo DiCaprio", "Will Smith","Johnny Depp",
+			"Taylor Swift","Kanye West", "Jim Morrison","John Lennon"};
+			ofstream lib("libros.bin", ios::binary | ios::out | ios::trunc);
+			lib.seekp(0);
+			header.setDirty(true);
+			lib.write(reinterpret_cast<char*>(&header),sizeof(Header));
+			char Titulo[76];
+			char Autor [76];
+			long int ISBN;
+			char app[]="0000000-1";
+			char pasar[14];
+			char final[23];
+			int Editorial;
+			for (int i = 0; i < cantidadAGenerar; ++i){
+				strcpy(Titulo,PrimerNombre[rand()%19]);
+				strcat(Titulo,SegundoNombre[rand()%19]);
+				strcpy(Autor,autores[rand()%19]);
+				ISBN = 1000000000000+rand()%99999999999999;
+				Editorial = 1+rand()%60;
+				string s = to_string(ISBN);
+				const char* c = s.c_str();
+				strcpy(pasar,c);
+				strcpy(final,app);
+				strcat(final,pasar);
+				final[23] = '\0';
+				Titulo[strlen(Titulo)] = '\0';
+				Autor[strlen(Autor)] = '\0';
+				//Libro(char* ISBN,char* Nombre,char* Autor,unsigned int EditorialID);
+				Libro libro(final,Titulo,Autor,Editorial);
+				lib.write(reinterpret_cast<char*>(&libro),sizeof(Libro));
+			}
+			lib.close();
+			headerDirty = true;
+
+
+
 
 		}else if(seleccionMenu == 9){
 			if (headerDirty){
