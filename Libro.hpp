@@ -16,6 +16,8 @@ class Libro{
 		const char* getNombre();
 		const char* getAutor();
 		const unsigned int getEditorialID();
+		const char getMark();
+		const int getAvail();
 
 		//Setters
 		void setDeleted(bool deleted);
@@ -23,6 +25,8 @@ class Libro{
 		void setNombre(char* Nombre);
 		void setAutor(char* Autor);
 		void setEditorialID(unsigned int Editorial);
+		void setMark(char mark);
+		void setAvail(int avail);
 
 		string toString(); 
 
@@ -32,4 +36,6 @@ class Libro{
 		char Autor[76];
 		unsigned int EditorialID;
 		bool Deleted;
+		char mark;
+		int avail;
 };

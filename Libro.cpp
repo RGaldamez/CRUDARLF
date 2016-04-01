@@ -16,6 +16,7 @@ Libro::Libro(char* ISBN, char* Nombre, char* Autor, unsigned int EditorialID){
 	strcpy(this->Autor, Autor);
 	this->EditorialID = EditorialID;
 	this->Deleted = false;
+	this-> mark = '-';
 }
 
 Libro::~Libro(){
@@ -41,6 +42,14 @@ const unsigned int Libro::getEditorialID(){
 const bool Libro::getDeleted(){
 	return this->Deleted;
 }
+
+const char Libro::getMark(){
+	return this->mark;
+}
+
+const int Libro::getAvail(){
+	return this->avail;
+}
 //Setters 
 void Libro::setISBN(char* ISBN){
 	strcpy(this->ISBN,ISBN);
@@ -48,6 +57,10 @@ void Libro::setISBN(char* ISBN){
 void Libro::setNombre(char* Nombre){
 	strcpy(this-> Nombre,Nombre);
 }
+void Libro::setMark(char mark){
+	this->mark = mark;
+}
+
 void Libro::setAutor(char* Autor){
 	strcpy(this->Autor, Autor);
 }
@@ -56,6 +69,9 @@ void Libro::setEditorialID(unsigned int Editorial){
 }
 void Libro::setDeleted(bool deleted){
 	this->Deleted = deleted;
+}
+void Libro::setAvail(int avail){
+	this-> avail = avail;
 }
 
 string Libro::toString(){
