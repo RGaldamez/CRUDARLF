@@ -45,7 +45,6 @@ int main(int argc, char const *argv[]){
 	if (infileLibros.good()){
 		infileLibros.seekg(0);
 		infileLibros.read(reinterpret_cast<char*>(&jader), sizeof(Header));
-		cout<< " el availList actual es : "<<jader.getAvailList()<<endl;
 		dirtyHeader = jader.getDirty();
 		if (dirtyHeader == true){
 			aHierro = 1;
@@ -193,6 +192,13 @@ int main(int argc, char const *argv[]){
 
 	do {
 
+		ifstream ifstreamer("libros.bin", ios::binary | ios::in);
+		Header temptemptemp;
+		ifstreamer.seekg(0);
+		ifstreamer.read(reinterpret_cast<char*>(&temptemptemp), sizeof(Header));
+		ifstreamer.close();
+		cout<<"Avail List = "<<temptemptemp.getAvailList()<<endl;
+
 		seleccionMenu = menu();
 		cout<<seleccionMenu<<endl;
 		ifstream infile("libros.bin",ios::binary);
@@ -234,12 +240,20 @@ int main(int argc, char const *argv[]){
 			cout<<"Porfavor ingrese el nombre del autor del libro: ";
 			cin.getline(Autor,76);
 			cout<<endl;
-			cout<<"porfavor ingrese un ID: ";
+			cout<<"porfavor ingrese un ID (1 - 20) : ";
 			cin>>editorialID;
 			Libro libroTemp(ISBN,Nombre,Autor,editorialID);
+			Header Heather;
+
+			ifstream heath("libros.bin", ios::binary | ios::in);
+			heath.seekg(0);
+			heath.read(reinterpret_cast<char*>(&Heather), sizeof(Header));
+			heath.close();
 
 
-			if (header.getAvailList()==-1){
+
+
+			if (Heather.getAvailList()==-1){
 				ofstream outfile("libros.bin",ios::binary | ios::app | ios::ate);
 				outfile.write(reinterpret_cast<char*>(&libroTemp),sizeof(Libro));
 				outfile.close();
@@ -248,6 +262,36 @@ int main(int argc, char const *argv[]){
 				RealDirty = true;
 
 			}else{
+				long int offset = Heather.getAvailList();
+				long int nextOffset;
+				ifstream readFile("libros.bin", ios::binary | ios::in);
+				Libro Book;
+				readFile.seekg(offset);
+				readFile.read(reinterpret_cast<char*>(&Book), sizeof(Libro));
+				readFile.close();
+				nextOffset = Book.getAvail();
+
+
+				fstream outfile("libros.bin", ios::binary | ios::in | ios::out);
+				outfile.seekp(offset);
+				outfile.write(reinterpret_cast<char*>(&libroTemp), sizeof(Libro));
+
+				Heather.setAvailList(nextOffset);
+				outfile.seekp(0);
+				outfile.write(reinterpret_cast<char*>(&Heather), sizeof(Header));
+				outfile.close();
+
+
+				header.setRecordCount(header.getRecordCount()+1);
+				headerDirty = true;
+				RealDirty = true;
+
+
+
+
+
+
+				/*
 				long int offset = (header.getAvailList()*sizeof(Libro)) + sizeof(Header);
 				streampos pos = offset;
 				ifstream infile("libros.bin", ios::binary);
@@ -283,6 +327,7 @@ int main(int argc, char const *argv[]){
 				headerDirty = true;
 				header.setRecordCount(header.getRecordCount()+1);
 				RealDirty = true;
+				*/
 
 				
 			}
@@ -351,7 +396,7 @@ int main(int argc, char const *argv[]){
 						ISBNToShow[i] = libro.getISBN()[i+9];
 					}
 					ISBNToShow[14] = '\0';
-					if (!infile.eof() && !libro.getDeleted()){
+					if (!infile.eof() && libro.getMark() != '*'){
 						contador++;
 						cout<<contador<<": ";
 						cout<< "ISBN: "<<ISBNToShow<<endl;
@@ -621,7 +666,6 @@ int main(int argc, char const *argv[]){
 					if (headercito.getAvailList() == -1){
 
 						headercito.setAvailList(offset);
-						cout<<"offset"<<headercito.getAvailList();
 						actual.setAvail(-1);
 					}else{
 						actual.setAvail(headercito.getAvailList());
@@ -739,7 +783,7 @@ int main(int argc, char const *argv[]){
 				strcat(Titulo,SegundoNombre[rand()%19]);
 				strcpy(Autor,autores[rand()%19]);
 				ISBN = 1000000000000+rand()%99999999999999;
-				Editorial = 1+rand()%30;
+				Editorial = 1+rand()%20;
 				string s = to_string(ISBN);
 				const char* c = s.c_str();
 				strcpy(pasar,c);
@@ -759,6 +803,10 @@ int main(int argc, char const *argv[]){
 
 
 		}else if(seleccionMenu == 9){
+
+			//busqueda
+
+		}else if(seleccionMenu == 10){
 			if (!noWrite){
 				Header cabeza;
 				ifstream ifs("libros.bin", ios::binary | ios::in);
@@ -806,14 +854,15 @@ int menu(){
 		cout<<"6)testear indice"<<endl;
 		cout<<"7)Compactar Archivo"<<endl;
 		cout<<"8)Generar Libros"<<endl;
-		cout<<"9)Salir"<<endl;
+		cout<<"9)Busqueda usando ISBN"<<endl;
+		cout<<"10)Salir"<<endl;
 		cout<<"Porfavor haga su eleccion:";
 		cin>>seleccion;
 		cout<<endl;
-		if(seleccion>9 || seleccion<1){
+		if(seleccion>11 || seleccion<1){
 			cout<<"Porfavor ingrese un numero valido"<<endl;
 		}
-	}while(seleccion>9 || seleccion<1);
+	}while(seleccion>11 || seleccion<1);
 	return seleccion;
 }
 
