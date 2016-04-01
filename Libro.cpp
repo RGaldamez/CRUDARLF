@@ -17,6 +17,7 @@ Libro::Libro(char* ISBN, char* Nombre, char* Autor, unsigned int EditorialID){
 	this->EditorialID = EditorialID;
 	this->Deleted = false;
 	this-> mark = '-';
+	this-> avail = -2;
 }
 
 Libro::~Libro(){
