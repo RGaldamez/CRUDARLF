@@ -413,7 +413,8 @@ int main(int argc, char const *argv[]){
 						cout<< "ISBN: "<<ISBNToShow<<endl;
 						cout<<"Nombre del Libro: "<<libro.getNombre()<<endl;
 						cout<<"Autor: "<<libro.getAutor()<<endl;
-						cout<<"ID Editorial: "<<libro.getEditorialID()<<endl<<endl;
+						cout<<"Nombre de la Editorial: "<<nombreEditoriales[libro.getEditorialID()]<<endl;
+						cout<<"Direccion de la Editorial: "<<direccionEditoriales[libro.getEditorialID()]<<endl<<endl;
 
 					}
 
@@ -434,11 +435,12 @@ int main(int argc, char const *argv[]){
 					ISBNToShow[14] = '\0';
 					if (!infile.eof() && libro.getMark() != '*'){
 						contador++;
-						cout<<contador<<": ";
+						cout<<contador<<"= ";
 						cout<< "ISBN: "<<ISBNToShow<<endl;
 						cout<<"Nombre del Libro: "<<libro.getNombre()<<endl;
 						cout<<"Autor: "<<libro.getAutor()<<endl;
-						cout<<"ID Editorial: "<<libro.getEditorialID()<<endl<<endl;
+						cout<<"Nombre de la Editorial: "<<nombreEditoriales[libro.getEditorialID()]<<endl;
+						cout<<"Direccion de la Editorial: "<<direccionEditoriales[libro.getEditorialID()]<<endl<<endl;
 					}
 
 				}
