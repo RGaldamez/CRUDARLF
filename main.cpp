@@ -4,6 +4,7 @@ using namespace std;
 #include "Libro.hpp"
 #include "Header.hpp"
 #include "indexFile.hpp"
+#include "Editorial.hpp"
 
 #include <vector>
 using std::vector;
@@ -36,12 +37,46 @@ int main(int argc, char const *argv[]){
 	bool indexExists = false;
 	Header header(-1, sizeof(Libro),0,false);
 	bool noWrite = false;
+	//editorialID nombre Direccion
 
 	//creating index, attempt 2
 	ifstream infileLibros("libros.bin",ios::binary);
 	ifstream infileIndex("index.bin",ios::binary);
+	ifstream infileEditorial("editoriales.bin", ios::binary | ios::in);
 	Header jader;
 	int aHierro = 0;
+	char nombreEditoriales[21][25] = {"Alfaguara", "Algaida", "Almadraba", "Algar", "Almuzara",
+	 "Anaya", "Apila","Buen Paso","Bambu","Berenice",
+	 "Barcanova","Brosquil","Casals","Bromera",
+	 "Coco Books","ComaNegra","Creagem","Edebe","Edelvives","Destino"};
+	char direccionEditoriales[21][25] = {"La Canoa","Puerto Rico","Las Hadas","Las Uvas","Villa Olimpica",
+	"Kennedy","Kansas","California","Romania","Grecia",
+	"Francia","Alemania","Los Tostones","Mexico","Canada",
+	"China","Portugal","Chile","Colombia","Venezuela"};
+
+	if(!infileEditorial.good()){
+		infileEditorial.close();
+		ofstream edit("editoriales.bin", ios::binary| ios::out | ios::trunc);
+		Editorial* editor;
+		for (int i = 1; i < 21; ++i){
+				editor = new Editorial(i,nombreEditoriales[i],direccionEditoriales[i]);
+				edit.write(reinterpret_cast<char*>(&editor), sizeof(Editorial));
+				delete editor;
+		}
+		edit.close();
+	}else{
+		infileEditorial.close();
+	}
+
+
+
+
+
+
+
+
+
+
 	if (infileLibros.good()){
 		infileLibros.seekg(0);
 		infileLibros.read(reinterpret_cast<char*>(&jader), sizeof(Header));
@@ -707,7 +742,7 @@ int main(int argc, char const *argv[]){
 
 
 
-		}else if(seleccionMenu == 6){
+		}/*else if(seleccionMenu == 6){
 			ifstream infile("index.bin", ios::binary);
 			indexFile index;
 			if(infile.good()){
@@ -726,7 +761,8 @@ int main(int argc, char const *argv[]){
 			infile.close();
 
 
-		}else if(seleccionMenu == 7){
+		}*/
+		else if(seleccionMenu == 6){
 			Libro temp;
 			ofstream compact("libros2.bin", ios::binary | ios::out | ios::trunc);
 			compact.write(reinterpret_cast<char*>(&header), sizeof(Header));
@@ -746,7 +782,7 @@ int main(int argc, char const *argv[]){
 			headerDirty = true;
 
 			
-		}else if(seleccionMenu == 8){
+		}else if(seleccionMenu == 7){
 			int cantidadAGenerar;
 			cout<<"Cuantos Libros desea generar?: ";
 			cin>>cantidadAGenerar;
@@ -802,11 +838,11 @@ int main(int argc, char const *argv[]){
 
 
 
-		}else if(seleccionMenu == 9){
+		}else if(seleccionMenu == 8){
 
 			//busqueda
 
-		}else if(seleccionMenu == 10){
+		}else if(seleccionMenu == 9){
 			if (!noWrite){
 				Header cabeza;
 				ifstream ifs("libros.bin", ios::binary | ios::in);
@@ -851,18 +887,17 @@ int menu(){
 		cout<<"3)Modificar un registro"<<endl;
 		cout<<"4)Eliminar un registro"<<endl;
 		cout<<"5)Obtener el tamaño del archivo (opcion de desarrollo)"<<endl;
-		cout<<"6)testear indice"<<endl;
-		cout<<"7)Compactar Archivo"<<endl;
-		cout<<"8)Generar Libros"<<endl;
-		cout<<"9)Busqueda usando ISBN"<<endl;
-		cout<<"10)Salir"<<endl;
+		cout<<"6)Compactar Archivo"<<endl;
+		cout<<"7)Generar Libros"<<endl;
+		cout<<"8)Busqueda usando ISBN"<<endl;
+		cout<<"9)Salir"<<endl;
 		cout<<"Porfavor haga su eleccion:";
 		cin>>seleccion;
 		cout<<endl;
-		if(seleccion>11 || seleccion<1){
+		if(seleccion>9 || seleccion<1){
 			cout<<"Porfavor ingrese un numero valido"<<endl;
 		}
-	}while(seleccion>11 || seleccion<1);
+	}while(seleccion>9 || seleccion<1);
 	return seleccion;
 }
 
